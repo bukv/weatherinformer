@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,15 +11,18 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	"github.com/hajimehoshi/go-mp3"
+	"github.com/hajimehoshi/oto"
 )
 
 var clear map[string]func() //create a map for storing clear screen funcs
 
 //Main  in response
 type Main struct {
-	Temp     int `json:"temp"`
-	Pressure int `json:"pressure"`
-	Humidity int `json:"humidity"`
+	Temp     float32 `json:"temp"`
+	Pressure float32 `json:"pressure"`
+	Humidity float32 `json:"humidity"`
 }
 
 //Response data
@@ -71,29 +75,40 @@ func getData(httpStr string) []byte {
 	return responseData
 }
 
+func playSound() error {
+	f, err := os.Open("C:\\Users\\user\\Desktop\\1.mp3")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	d, err := mp3.NewDecoder(f)
+	if err != nil {
+		return err
+	}
+
+	c, err := oto.NewContext(d.SampleRate(), 2, 2, 8192)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	p := c.NewPlayer()
+	defer p.Close()
+
+	if _, err := io.Copy(p, d); err != nil {
+		return err
+	}
+	return nil
+}
+
 func showWeather(link string) {
 	var response Response
 	var weatherData []byte
-	var temperature, pressure, humidity int
-
+	var temperature, pressure, humidity float32
 	for {
 		weatherData = getData(link)
 		json.Unmarshal([]byte(weatherData), &response)
-
-		/*
-			fmt.Printf(response.Name)
-			fmt.Println("")
-			fmt.Println(temperature != int(response.Main.Temp))
-			fmt.Println(temperature)
-			fmt.Println(int(response.Main.Temp))
-			fmt.Println(pressure != int(response.Main.Pressure))
-			fmt.Println(pressure)
-			fmt.Println(int(response.Main.Pressure))
-			fmt.Println(humidity != int(response.Main.Humidity))
-			fmt.Println(humidity)
-			fmt.Println(int(response.Main.Humidity))
-			fmt.Println("")
-		*/
 
 		if temperature != response.Main.Temp || pressure != response.Main.Pressure || humidity != response.Main.Humidity {
 
@@ -109,9 +124,13 @@ func showWeather(link string) {
 			fmt.Print("[press Ctrl+C to exit]\n")
 			fmt.Println("")
 
-			temperature = int(response.Main.Temp)
-			pressure = int(response.Main.Pressure)
-			humidity = int(response.Main.Humidity)
+			temperature = float32(response.Main.Temp)
+			pressure = float32(response.Main.Pressure)
+			humidity = float32(response.Main.Humidity)
+
+			if err := playSound(); err != nil {
+				log.Fatal(err)
+			}
 
 			//uncomment next line if you want see all API data
 			//fmt.Println(string(weatherData))
