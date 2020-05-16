@@ -1,2 +1,3 @@
-#Weather informer
-This project uses the openweathermap.org API to display weather information on a web page.
+Weather informer
+================
+This project uses the [openweathermap](http://openweathermap.org "Current weather and forecasts in your city") API to display weather information on a web page.
