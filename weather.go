@@ -6,82 +6,9 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
-
-var apiHTTP string
-
-const page = `<!DOCTYPE html>
-<html>
-  	<head>
-    	<meta charset="utf-8">
-		<title>Weather</title>
-	</head>
-	<body>
-	<div class="search">
-	<form action="/weather" method="get">
-		<label for="city">City: </label>
-		<input type="text" id="city" name="city">
-		<input type="submit" value="Search">
-	</form>
-	</div>
-
-	<div class="name"><h1><b>{{.Name}}</b></h1></div>
-	<div class="coord">
-	Coordinates:</br>
-	Longitude {{.Coord.Lon}}</br>
-	Latitude  {{.Coord.Lat}}	
-	</div>
-
-	<div class="weather">
-	Weather:</br>
-	{{$weather := index .Weather 0}}
-	ID {{$weather.ID}}</br>
-	Main {{$weather.Main}}</br>
-	Description {{$weather.Description}}</br>
-	Icon {{$weather.Icon}}
-	</div>
-
-	<div class="base">Base: {{.Base}}</div>
-
-	<div class="main">
-	Main: </br>
-	Temperature {{.Main.Temp}} °C</br>
-	Feels like {{.Main.FeelsLike}} °C</br>
-	Temperature min {{.Main.TempMin}} °C</br>
-	Temperature max {{.Main.TempMax}} °C</br>
-	Pressure {{.Main.Pressure}} mm Hg\n</br>
-	Humidity {{.Main.Humidity}} %</br>
-	</div>
-
-	<div class="visibility">Visibility: {{.Visibility}} m</div>
-
-	<div class="wind">
-	Wind: </br>
-	Speed {{.Wind.Speed}} m/s </br>
-	Degree {{.Wind.Deg}} </br>
-	</div>
-
-	<div class="rain">Rain: {{.Rain.H}}</div>
-
-	<div class="clouds">Clouds: {{.Clouds.All}}</div>
-
-	<div class="dt">Dt: {{.Dt}}</div>
-
-	<div class="sys">
-	Sys:</br>
-	Type {{.Sys.Type}}</br>
-	ID {{.Sys.ID}}</br>
-	Country {{.Sys.Country}}</br>
-	Sunrise {{.Sys.Sunrise}}</br>
-	Sunset {{.Sys.Sunset}}
-	</div>
-
-	<div class="timezone">Timezone: {{.Timezone}}</div>
-
-	<div class="id">ID: {{.ID}}</div>
-</body>
-</html>
-`
 
 type Coord struct {
 	Lon float32 `json:"lon"`
@@ -203,12 +130,17 @@ func informer(w http.ResponseWriter, req *http.Request) {
 
 	json.Unmarshal([]byte(weatherData), &response)
 
-	tmpl, _ := template.New("content").Parse(page)
+	tmpl := template.Must(template.ParseFiles("html/index.html"))
+
 	tmpl.Execute(w, response)
 }
 
 func main() {
-	http.HandleFunc("/weather", informer) // http://localhost:8090/weather
-	http.ListenAndServe(":8090", nil)
+	req := mux.NewRouter()
+	req.HandleFunc("/", informer)
 
+	req.PathPrefix("/styles/").Handler(http.StripPrefix("/styles/", http.FileServer(http.Dir("styles/"))))
+
+	http.Handle("/", req) // http://localhost:8090/
+	http.ListenAndServe(":8090", nil)
 }
