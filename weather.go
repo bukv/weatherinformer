@@ -5,28 +5,27 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 )
 
 var apiHTTP string
 
-const head = `<!DOCTYPE html>
+const page = `<!DOCTYPE html>
 <html>
   	<head>
     	<meta charset="utf-8">
 		<title>Weather</title>
 	</head>
 	<body>
+	<div class="search">
 	<form action="/weather" method="get">
 		<label for="city">City: </label>
 		<input type="text" id="city" name="city">
 		<input type="submit" value="Search">
 	</form>
-`
+	</div>
 
-const content = `<div class="name"><h1><b>{{.Name}}</b></h1></div>
+	<div class="name"><h1><b>{{.Name}}</b></h1></div>
 	<div class="coord">
 	Coordinates:</br>
 	Longitude {{.Coord.Lon}}</br>
@@ -80,8 +79,7 @@ const content = `<div class="name"><h1><b>{{.Name}}</b></h1></div>
 	<div class="timezone">Timezone: {{.Timezone}}</div>
 
 	<div class="id">ID: {{.ID}}</div>
-`
-const foot = `</body>
+</body>
 </html>
 `
 
@@ -127,7 +125,7 @@ type Sys struct {
 	Sunset  int    `json:"sunset"`
 }
 
-type Response struct {
+type response struct {
 	Coord      Coord     `json:"coord"`
 	Weather    []Weather `json:"weather"`
 	Base       string    `json:"base"`
@@ -156,24 +154,16 @@ func makeHTTP(name string, key string) string {
 
 func getData(httpStr string) []byte {
 	response, err := http.Get(httpStr)
-
-	if err != nil {
-		fmt.Print(err.Error())
-		os.Exit(1)
-	}
+	check(err)
 
 	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 
 	return responseData
 }
 
-func informer(w http.ResponseWriter, req *http.Request) {
-	var response Response
-	var weatherData []byte
-	var cityName string
+func parseCity(req *http.Request) string {
+	var city string
 
 	err := req.ParseForm() //parse args
 	check(err)
@@ -182,37 +172,39 @@ func informer(w http.ResponseWriter, req *http.Request) {
 		for _, value := range values { // range over []string
 			switch key {
 			case "city":
-				cityName = value
+				city = value
 				break
 			default:
-				fmt.Fprintf(w, "invalid request")
+				fmt.Println("invalid request")
 			}
 		}
 	}
 
-	fmt.Println(cityName)
+	if city == "" {
+		city = "london"
+	}
 
-	keyAPI := "6b4866b74a0e31e0bd0ccdc1db1de0dc"
-	apiHTTP := makeHTTP(cityName, keyAPI)
+	return city
+}
+
+func informer(w http.ResponseWriter, req *http.Request) {
+	var response response
+	var weatherData []byte
+	var cityName string
+	var apiHTTP string
+	var keyAPI string
+
+	cityName = parseCity(req)
+
+	keyAPI = "6b4866b74a0e31e0bd0ccdc1db1de0dc"
+	apiHTTP = makeHTTP(cityName, keyAPI)
 
 	weatherData = getData(apiHTTP)
 
 	json.Unmarshal([]byte(weatherData), &response)
 
-	if cityName == "" {
-		fmt.Fprintf(w, head)
-		fmt.Fprintf(w, foot)
-	} else {
-		fmt.Fprintf(w, head)
-		tmpl, _ := template.New("content").Parse(content)
-		tmpl.Execute(w, response)
-		fmt.Fprintf(w, foot)
-
-		fmt.Println(response.Weather[0].Description)
-
-	}
-
-	fmt.Println(response.Name)
+	tmpl, _ := template.New("content").Parse(page)
+	tmpl.Execute(w, response)
 }
 
 func main() {
