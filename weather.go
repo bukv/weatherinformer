@@ -52,7 +52,7 @@ type Sys struct {
 	Sunset  int    `json:"sunset"`
 }
 
-type response struct {
+type weatherInfo struct {
 	Coord      Coord     `json:"coord"`
 	Weather    []Weather `json:"weather"`
 	Base       string    `json:"base"`
@@ -67,6 +67,7 @@ type response struct {
 	ID         int       `json:"id"`
 	Name       string    `json:"name"`
 	Cod        int       `json:"cod"`
+	IconLink   string
 }
 
 func check(err error) {
@@ -77,6 +78,10 @@ func check(err error) {
 
 func makeHTTP(name string, key string) string {
 	return fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?q=%s&units=metric&appid=%s", name, key)
+}
+
+func iconHTTP(iconCode string) string {
+	return fmt.Sprintf("http://openweathermap.org/img/wn/%s@2x.png", iconCode)
 }
 
 func getData(httpStr string) []byte {
@@ -115,7 +120,7 @@ func parseCity(req *http.Request) string {
 }
 
 func informer(w http.ResponseWriter, req *http.Request) {
-	var response response
+	var data weatherInfo
 	var weatherData []byte
 	var cityName string
 	var apiHTTP string
@@ -123,16 +128,18 @@ func informer(w http.ResponseWriter, req *http.Request) {
 
 	cityName = parseCity(req)
 
-	keyAPI = "6b4866b74a0e31e0bd0ccdc1db1de0dc"
+	keyAPI = "" //enter your API key here
 	apiHTTP = makeHTTP(cityName, keyAPI)
 
 	weatherData = getData(apiHTTP)
 
-	json.Unmarshal([]byte(weatherData), &response)
+	json.Unmarshal([]byte(weatherData), &data)
+
+	data.IconLink = iconHTTP(data.Weather[0].Icon)
 
 	tmpl := template.Must(template.ParseFiles("html/index.html"))
 
-	tmpl.Execute(w, response)
+	tmpl.Execute(w, data)
 }
 
 func main() {

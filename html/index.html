@@ -3,70 +3,77 @@
   	<head>
 		<meta charset="utf-8">
 		<link href="/styles/reset.css" rel="stylesheet">
+		<link href="/styles/style.css" rel="stylesheet">
 		<title>Weather</title>
 	</head>
 	<body>
-	<div class="search">
-	<form action="/" method="get">
-		<label for="city">City: </label>
-		<input type="text" id="city" name="city">
-		<input type="submit" value="Search">
-	</form>
-	</div>
+		<div class="top">	
+			<div class="search">
+				<form action="/" method="get">
+					<input type="text" id="city" name="city"  placeholder="Enter your city name">
+					<input type="submit" value="Search">
+				</form>
+			</div>
+		</div>
 
-	<div class="name"><h1><b>{{.Name}}</b></h1></div>
-	<div class="coord">
-	Coordinates:</br>
-	Longitude {{.Coord.Lon}}</br>
-	Latitude  {{.Coord.Lat}}	
-	</div>
+		<div class="content">
+			<div class="name"><h1><b>{{.Name}}</b></h1></div>
+			<div class="weatherBlock">
+			<h3>Coordinates</h3></br>
+			Longitude: {{.Coord.Lon}}</br>
+			Latitude:  {{.Coord.Lat}}	
+			</div>
 
-	<div class="weather">
-	Weather:</br>
-	{{$weather := index .Weather 0}}
-	ID {{$weather.ID}}</br>
-	Main {{$weather.Main}}</br>
-	Description {{$weather.Description}}</br>
-	Icon {{$weather.Icon}}
-	</div>
+			<div class="weatherBlock">
+			<h3>Main</h3> </br>
+			Temperature: {{.Main.Temp}} °C</br>
+			Feels like: {{.Main.FeelsLike}} °C</br>
+			Temperature min: {{.Main.TempMin}} °C</br>
+			Temperature max: {{.Main.TempMax}} °C</br>
+			Pressure: {{.Main.Pressure}} mm Hg\n</br>
+			Humidity: {{.Main.Humidity}} %</br>
+			</div>
+				
+			<div class="weatherBlock">
+			<h3>Weather</h3></br>
+			{{$weather := index .Weather 0}}
+			ID: {{$weather.ID}}</br>
+			Main: {{$weather.Main}}</br>
+			Description: {{$weather.Description}}</br>
+			Icon: {{$weather.Icon}}
+			</div>
 
-	<div class="base">Base: {{.Base}}</div>
+	
+			<div class="weatherBlock">
+			<h3>Wind</h3> </br>
+			Speed: {{.Wind.Speed}} m/s </br>
+			Degree: {{.Wind.Deg}} </br>
+			</div>
 
-	<div class="main">
-	Main: </br>
-	Temperature {{.Main.Temp}} °C</br>
-	Feels like {{.Main.FeelsLike}} °C</br>
-	Temperature min {{.Main.TempMin}} °C</br>
-	Temperature max {{.Main.TempMax}} °C</br>
-	Pressure {{.Main.Pressure}} mm Hg\n</br>
-	Humidity {{.Main.Humidity}} %</br>
-	</div>
+			<div class="weatherBlock"><img src="{{.IconLink}}" alt="icon"></div>
+			
+			<div class="weatherBlock">
+			<h3>Sys</h3></br>
+			Type: {{.Sys.Type}}</br>
+			ID: {{.Sys.ID}}</br>
+			Country: {{.Sys.Country}}</br>
+			Sunrise: {{.Sys.Sunrise}}</br>
+			Sunset: {{.Sys.Sunset}}
+			</div>
 
-	<div class="visibility">Visibility: {{.Visibility}} m</div>
+			<div class="weatherLine">Visibility: {{.Visibility}} m</div>		
 
-	<div class="wind">
-	Wind: </br>
-	Speed {{.Wind.Speed}} m/s </br>
-	Degree {{.Wind.Deg}} </br>
-	</div>
+			<div class="weatherLine">Rain: {{.Rain.H}}</div>
 
-	<div class="rain">Rain: {{.Rain.H}}</div>
+			<div class="weatherLine">Clouds: {{.Clouds.All}}</div>
 
-	<div class="clouds">Clouds: {{.Clouds.All}}</div>
+			<div class="weatherLine">Base: {{.Base}}</div>
 
-	<div class="dt">Dt: {{.Dt}}</div>
+			<div class="weatherLine">Dt: {{.Dt}}</div>
 
-	<div class="sys">
-	Sys:</br>
-	Type {{.Sys.Type}}</br>
-	ID {{.Sys.ID}}</br>
-	Country {{.Sys.Country}}</br>
-	Sunrise {{.Sys.Sunrise}}</br>
-	Sunset {{.Sys.Sunset}}
-	</div>
+			<div class="weatherLine">Timezone: {{.Timezone}}</div>
 
-	<div class="timezone">Timezone: {{.Timezone}}</div>
-
-	<div class="id">ID: {{.ID}}</div>
+			<div class="weatherLine">ID: {{.ID}}</div>
+		</div>
 </body>
 </html>
